@@ -1,0 +1,56 @@
+FROM ubuntu:22.04
+
+# Prevent dialog prompt during apt install
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    sudo \
+    software-properties-common \ 
+    git
+
+# Install Microsoft package feed
+RUN curl https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb -o packages-microsoft-prod.deb \
+    && dpkg -i packages-microsoft-prod.deb
+
+RUN touch /etc/apt/preferences && \
+    echo "Package: dotnet* aspnet* netstandard*" >> /etc/apt/preferences && \
+    echo "Pin: origin archive.ubuntu.com" >> /etc/apt/preferences && \
+    echo "Pin-Priority: -10" >> /etc/apt/preferences
+
+# Install .NET SDK
+RUN apt-get update && apt-get install -y \
+    dotnet-sdk-7.0
+
+# Switch back to dialog for any ad-hoc use of apt-get
+ENV DEBIAN_FRONTEND=dialog
+
+# Create User
+RUN useradd -u 1000 vintecc && \
+    echo "vintecc:vintecc" | chpasswd && \
+    adduser vintecc sudo && \
+    mkdir -p /home/vintecc && \
+    chown -R vintecc /home/vintecc && \
+    printf "\nvintecc ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+    
+ENV USER=vintecc \
+    PATH=/home/vintecc/.local/bin:$PATH 
+
+USER vintecc
+WORKDIR /home/vintecc
+
+# Install ZSH
+RUN sudo apt install -y zsh && \
+    sudo chsh -s /usr/bin/zsh && \
+    # Install oh my zsh
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" && \
+    # configure .zshrc
+    cd ~ && \
+    touch .zshrc && \
+    sed -i 's/ZSH_THEME=.*/ZSH_THEME="eastwood"/' .zshrc && \
+    echo "ZSH Installed"
+
+ENTRYPOINT ["/usr/bin/zsh"]

@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  db:
+    image: mongo:jammy
+    restart: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=mypassword
+    ports:
+      - 27017:27017
+    volumes:
+      - db:/data/db
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=root
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=mypassword
+      - ME_CONFIG_MONGODB_SERVER=db
+      - ME_CONFIG_MONGODB_PORT=27017
+    depends_on:
+      - db
+
+  backend:
+    build:
+      context: ../..
+      dockerfile: .devcontainer/development/Dockerfile.Backend
+    user: vintecc
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
+    volumes:
+      - ../..:/workspace
+    ports:
+      - "8443:8443"
+    depends_on:
+      - db
+      
+  nginx:
+    build: 
+      context: ../..
+      dockerfile: .devcontainer/development/Dockerfile.Nginx
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
+    volumes:
+      - ../..:/workspace
+    ports:
+      - "80:80"
+    entrypoint: /entrypoint.sh
+
+  frontend:
+    build:
+      context: ../..
+      dockerfile: .devcontainer/development/Dockerfile.Frontend
+    user: vintecc
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
+    volumes:
+      - ../..:/workspace
+    ports:
+      - "3000:3000"
+    entrypoint: ["/bin/bash", "-c", "cd /workspace/frontend && npm start"]
+
+volumes:
+  db:
+    driver: local

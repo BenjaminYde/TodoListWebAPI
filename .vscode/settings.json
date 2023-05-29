@@ -1,0 +1,12 @@
+{
+    "terminal.integrated.defaultProfile.linux": "zsh",
+    "terminal.integrated.profiles.linux": {
+      "Azure Cloud Shell (Bash)": null,
+      "Azure Cloud Shell (PowerShell)": null,
+      "JavaScript Debug Terminal": null,
+      "bash": null,
+      "zsh": {
+        "path": "/usr/bin/zsh"
+      }
+    },
+  }

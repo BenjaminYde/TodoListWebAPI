@@ -1,0 +1,52 @@
+FROM ubuntu:22.04
+
+ENV NPM_CONFIG_LOGLEVEL=warn
+ENV NPM_CONFIG_COLOR=false
+
+ARG WORKSPACE
+
+# General APT packages
+RUN \
+    apt -qq update && \
+    apt -qq install -y \
+        curl \
+        sudo \
+        gnupg \ 
+        build-essential \
+        git
+
+# Install Nodejs & npm
+RUN curl -sL https://deb.nodesource.com/setup_18.x -o nodesource_setup.sh && \
+    sudo bash nodesource_setup.sh && \
+    sudo apt install nodejs
+
+# Verify that Node.js has been installed
+RUN node -v
+RUN npm -v
+
+# Create User
+RUN useradd -u 1000 vintecc && \
+    echo "vintecc:vintecc" | chpasswd && \
+    adduser vintecc sudo && \
+    mkdir -p /home/vintecc && \
+    chown -R vintecc /home/vintecc && \
+    printf "\nvintecc ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+    
+ENV USER=vintecc \
+    PATH=/home/vintecc/.local/bin:$PATH 
+
+USER vintecc
+WORKDIR /home/vintecc
+
+# Install ZSH
+RUN sudo apt install -y zsh && \
+    sudo chsh -s /usr/bin/zsh && \
+    # Install oh my zsh
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" && \
+    # configure .zshrc
+    cd ~ && \
+    touch .zshrc && \
+    sed -i 's/ZSH_THEME=.*/ZSH_THEME="eastwood"/' .zshrc && \
+    echo "ZSH Installed"
+
+ENTRYPOINT ["/usr/bin/zsh"]

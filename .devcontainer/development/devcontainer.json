@@ -1,0 +1,15 @@
+{
+	"name": "asset-library",
+	"dockerComposeFile": "docker-compose.yml",
+	"service": "backend",
+	"workspaceFolder": "/workspace",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"yzhang.markdown-all-in-one",
+				"mhutchie.git-graph",
+				"ms-dotnettools.csharp"
+			]
+		}
+	}
+}
